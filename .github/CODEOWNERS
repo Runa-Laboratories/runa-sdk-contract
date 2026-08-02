@@ -1,0 +1,6 @@
+# Canonical contract and automation changes require the known repository owner.
+* @superjava1
+/.github/ @superjava1
+/tools/ @superjava1
+/runa-*.json @superjava1
+/runa-*.sha256 @superjava1
