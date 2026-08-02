@@ -65,34 +65,54 @@ test("R-003-27 baseline extractor is independent and reproducible", async () => 
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("R-003-20 refuses release attestation while provenance is BLOCKED", async () => {
+test("R-003-20 enforces the current provenance state", async () => {
   const temporary = await mkdtemp(path.join(os.tmpdir(), "runa-attestation-"));
   const generated = path.join(temporary, "src", "internal", "contract", "generated");
   const output = path.join(temporary, "attestation.json");
   try {
     await generate("typescript", generated);
+    const bundle = await loadBundle(path.resolve("."));
+    const sourceRevision = bundle.provenance.status === "APPROVED"
+      ? bundle.provenance.source_revision
+      : "a".repeat(40);
     const result = spawnSync(process.execPath, ["tools/emit-release-attestation.mjs",
       "--language", "typescript", "--generated-root", generated,
-      "--source-revision", "a".repeat(40), "--output", output], { encoding: "utf8" });
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /R-003-20: release attestation blocked/u);
-    await assert.rejects(() => readFile(output), /ENOENT/u);
+      "--source-revision", sourceRevision, "--output", output], { encoding: "utf8" });
+    if (bundle.provenance.status === "BLOCKED") {
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /R-003-20: release attestation blocked/u);
+      await assert.rejects(() => readFile(output), /ENOENT/u);
+    } else {
+      assert.equal(result.status, 0, result.stderr);
+      const attestation = JSON.parse(await readFile(output, "utf8"));
+      assert.equal(attestation.status, "PASS");
+      assert.equal(attestation.source_revision, sourceRevision);
+    }
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }
 });
 
-test("R-003-15 explicit transition produces a valid APPROVED record without reading HEAD", async () => {
+test("R-003-15 validates approval transition or the immutable approved record", async () => {
+  const current = await loadBundle(path.resolve("."));
   const revision = "a".repeat(40);
   const url = "https://github.com/Runa-Laboratories/runa-sdk-contract/pull/1";
   const result = spawnSync(process.execPath, ["tools/approve-provenance.mjs", "--dry-run",
     "--canonical-ref", revision, "--contract-pr-url", url, "--contract-merge-sha", revision,
     "--prd002-pr-url", url, "--prd002-merge-sha", revision], { encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
-  const approved = JSON.parse(result.stdout);
-  assert.equal(approved.status, "APPROVED");
-  assert.equal(approved.canonical_ref, revision);
-  const candidate = await loadBundle(path.resolve("."));
-  candidate.provenance = approved;
-  validateBundle(candidate);
+  if (current.provenance.status === "BLOCKED") {
+    assert.equal(result.status, 0, result.stderr);
+    const approved = JSON.parse(result.stdout);
+    assert.equal(approved.status, "APPROVED");
+    assert.equal(approved.canonical_ref, revision);
+    current.provenance = approved;
+    validateBundle(current);
+  } else {
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /provenance is not in BLOCKED state/u);
+    assert.match(current.provenance.canonical_ref, /^[a-f0-9]{40}$/u);
+    assert.match(current.provenance.approval_reference.contract_pull_request_url,
+      /^https:\/\/github\.com\/Runa-Laboratories\/runa-sdk-contract\/pull\/\d+$/u);
+    validateBundle(current);
+  }
 });
