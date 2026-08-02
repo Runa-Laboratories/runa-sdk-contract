@@ -1,0 +1,20 @@
+{
+  "name": "@runa/sdk-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canonical, auditable Runa SDK contract artifacts and verification tools.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check": "npm run lint && npm run extract:check && npm run artifacts:check && npm run verify && npm test",
+    "artifacts:check": "node tools/build-contract-artifacts.mjs",
+    "extract:check": "node tools/extract-prd002-expectations.mjs --check",
+    "lint": "node tools/lint.mjs",
+    "test": "node --test",
+    "verify": "node tools/verify-contract.mjs",
+    "verify:workspace-sources": "node tools/verify-workspace-sources.mjs"
+  }
+}
