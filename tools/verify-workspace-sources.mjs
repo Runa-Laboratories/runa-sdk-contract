@@ -21,13 +21,13 @@ for (const source of manifest.sources) {
 }
 
 for (const name of ["runa-api.openapi.json", "runa-api.openapi.sha256", "runa-sdk.projection.json"]) {
-  const infra = await readFile(path.resolve(root, "../../infra/contracts", name));
-  const typescript = await readFile(path.resolve(root, "../../libs/typescript/contracts", name));
+  const infra = await readFile(path.resolve(root, "../../../infra/contracts", name));
+  const typescript = await readFile(path.resolve(root, ".", name));
   assert.deepEqual(typescript, infra, `shared source bytes differ: ${name}`);
 }
 for (const name of ["runa-api.openapi.json", "runa-api.openapi.sha256"]) {
   const candidate = await readFile(path.join(root, name), "utf8");
-  const source = await readFile(path.resolve(root, "../../libs/typescript/contracts", name), "utf8");
+  const source = await readFile(path.resolve(root, ".", name), "utf8");
   if (name.endsWith(".json")) {
     assert.equal(canonicalJson(JSON.parse(candidate)), canonicalJson(JSON.parse(source)),
       `canonical repository semantic drift: ${name}`);
@@ -37,7 +37,7 @@ for (const name of ["runa-api.openapi.json", "runa-api.openapi.sha256"]) {
 }
 const acceptedBaseline = await readFile(path.join(root, "sources/PRD-002-rest-contract-baseline.md"));
 const workspaceBaseline = await readFile(path.resolve(
-  root, "../../prds/libs/shared/PRD-002-rest-contract-baseline.md",
+  root, "../../../prds/libs/shared/PRD-002-rest-contract-baseline.md",
 ));
 assert.deepEqual(acceptedBaseline, workspaceBaseline, "accepted PRD-002 source bytes differ");
 console.log("workspace source verification: PASS");
