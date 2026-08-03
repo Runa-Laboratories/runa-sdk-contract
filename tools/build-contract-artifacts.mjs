@@ -43,7 +43,7 @@ const unresolvedFor = (key) => {
 const schemaSource = {
   CheckpointRequest: "PRD-002#6.1.1", Error: "PRD-002#6.7", ExecRequest: "PRD-002#6.1.1",
   ExecResult: "PRD-002#6.1.1", Me: "PRD-002#6.4", Ok: "PRD-002#6.1.1",
-  OpenResult: "PRD-002#6.5", Record: "PRD-002#6.6", RuntimeUrl: "PRD-002#6.5",
+  OpenResult: "PRD-002#6.5", OutboundPolicy: "PRD-002#6.1.1", Record: "PRD-002#6.6", RuntimeUrl: "PRD-002#6.5",
   SdkCreateSession: "PRD-002#6.1.1", Session: "PRD-002#6.2", Uuid: "PRD-002#6.2",
 };
 const operationKeys = [...operationsByKey.keys()].sort();
@@ -119,7 +119,7 @@ const snapshot = {
   operations: descriptors,
   question_map: expected.questions,
   schema_version: 1,
-  snapshot_version: "1.0.0",
+  snapshot_version: "1.1.0",
   source_reference_map: sourceReferenceMap,
   unresolved_question_map: unresolvedQuestionMap,
 };

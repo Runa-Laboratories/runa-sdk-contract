@@ -35,7 +35,7 @@ export const OPERATION_KEYS = Object.freeze([
 ]);
 const COMPONENTS = Object.freeze([
   "CheckpointRequest", "Error", "ExecRequest", "ExecResult", "Me", "Ok", "OpenResult",
-  "Record", "RuntimeUrl", "SdkCreateSession", "Session", "Uuid",
+  "OutboundPolicy", "Record", "RuntimeUrl", "SdkCreateSession", "Session", "Uuid",
 ]);
 const SOURCE_BASELINE = "sources/PRD-002-rest-contract-baseline.md";
 const GENERATOR = "tools/runa-contract-generator.mjs";
@@ -217,7 +217,7 @@ function validateProvenance(bundle) {
       value.generation_command_id !== "runa-contract-generator/v1" ||
       !same({ ...value.generator_identity, git_commit_sha: null }, { git_commit_sha: null, node_major: 24, path: GENERATOR, sha256: sha256(bundle.generatorBytes), version: "0.2.0" }) ||
       !same({ ...value.baseline_extractor_identity, git_commit_sha: null }, { git_commit_sha: null, node_major: 24, path: EXTRACTOR, sha256: sha256(bundle.extractorBytes) }) ||
-      value.semantic_change_class !== "none") fail("R-003-13", "provenance", "detached digest/identity differs");
+      value.semantic_change_class !== "additive") fail("R-003-13", "provenance", "detached digest/identity differs");
   if (value.status === "BLOCKED") {
     if (value.canonical_ref !== null || value.approval_reference !== null || value.source_revision !== null ||
         value.generator_identity.git_commit_sha !== null || value.baseline_extractor_identity.git_commit_sha !== null ||

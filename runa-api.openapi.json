@@ -632,6 +632,33 @@
       "type": "string",
       "pattern": "^https://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.runacode\\.cloud$"
     },
+    "OutboundPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "hosts"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "allowlist",
+            "denylist"
+          ]
+        },
+        "hosts": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 253,
+            "pattern": "^(?:\\*\\.)?(?![0-9]{1,3}(?:\\.[0-9]{1,3}){3}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
+          }
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "additionalProperties": false,
@@ -766,6 +793,9 @@
             "minLength": 1
           }
         },
+        "outbound_policy": {
+          "$ref": "#/components/schemas/OutboundPolicy"
+        },
         "runtime_port": {
           "type": "integer",
           "minimum": 1,
@@ -809,6 +839,9 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "outbound_policy": {
+          "$ref": "#/components/schemas/OutboundPolicy"
         },
         "runtime_port": {
           "type": "integer",
