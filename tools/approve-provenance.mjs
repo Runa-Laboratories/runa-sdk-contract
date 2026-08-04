@@ -6,6 +6,21 @@ import { canonicalBytes, sha256 } from "./lib/canonical-json.mjs";
 import { ARTIFACTS, ARTIFACT_SPEC, loadBundle, validateBundle } from "./lib/contract-model.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+async function updateSourceManifestProvenance() {
+  const manifestPath = path.join(root, "source-artifacts.manifest.json");
+  const manifestTemporary = `${manifestPath}.next`;
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const provenanceBytes = await readFile(path.join(root, "runa-sdk-contract.provenance.json"));
+  const sources = manifest.sources.map((source) => source.path === "runa-sdk-contract.provenance.json"
+    ? { ...source, sha256: sha256(provenanceBytes) }
+    : source);
+  await writeFile(
+    manifestTemporary,
+    canonicalBytes({ ...manifest, sources }),
+    { flag: "wx" },
+  );
+  await rename(manifestTemporary, manifestPath);
+}
 async function writeArtifactManifest() {
   const artifacts = [];
   for (const artifactPath of ARTIFACTS) {
@@ -41,6 +56,7 @@ if (process.argv.includes("--refresh-blocked")) {
   if (blockedBundle.provenance.status !== "BLOCKED") {
     throw new Error("R-003-15: blocked artifact refresh requires BLOCKED provenance.");
   }
+  await updateSourceManifestProvenance();
   await writeArtifactManifest();
   console.log("blocked provenance preserved; artifact manifest regenerated");
   process.exit(0);
@@ -77,6 +93,7 @@ if (process.argv.includes("--dry-run")) {
   const provenanceTemporary = `${provenancePath}.next`;
   await writeFile(provenanceTemporary, approvedBytes, { flag: "wx" });
   await rename(provenanceTemporary, provenancePath);
+  await updateSourceManifestProvenance();
   await writeArtifactManifest();
   console.log("provenance transition: APPROVED; artifact manifest regenerated");
 }
