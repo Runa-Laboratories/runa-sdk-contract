@@ -34,7 +34,7 @@ The Runa SDKs need one literal, shared understanding of the deployed `https://ap
 
 | Goal ID | Measurable goal |
 | --- | --- |
-| G-002-01 | Define all 13 PRD-001 Section 6.1 SDK-profile operations with 100% method, path, path-parameter, request-shape, success-shape, media/encoding, and exact-status coverage. |
+| G-002-01 | Define all 14 PRD-001 Section 6.1 SDK-profile operations with 100% method, path, path-parameter, request-shape, success-shape, media/encoding, and exact-status coverage. |
 | G-002-02 | Prove, using shared fixtures, that TypeScript and Python bindings preserve 100% of documented wire field names, optionality, enum values, object variants, and literal success bodies. |
 | G-002-03 | Prove that 100% of open-URL and service-limit conformance cases preserve the documented external semantics without SDK-side pre-enforcement or invented recovery behavior. |
 | G-002-04 | Keep undocumented behavior explicit: every source-silent detail is either absent from this baseline or recorded as an open question, with zero invented protocol defaults. |
@@ -55,7 +55,7 @@ This PRD does not define or authorize:
 
 | Class | Metric | Target | Evidence |
 | --- | --- | --- | --- |
-| North star | Shared REST-contract conformance | 13/13 SDK-profile operations pass their route, body, success-body, media/encoding, and exact-status cases in both language suites | Versioned shared fixture manifest and test reports |
+| North star | Shared REST-contract conformance | 14/14 SDK-profile operations pass their route, body, success-body, media/encoding, and exact-status cases in both language suites | Versioned shared fixture manifest and test reports |
 | Leading | Contract literal coverage | 100% of documented fields, optional markers, enums, variants, fixed values, and URL semantics appear in at least one fixture | Contract coverage review |
 | Leading | Undocumented-detail discipline | 0 invented status, field type, header, validation, pagination, or lifecycle assertions | PRD review and fixture audit |
 | Guardrail | Service-limit ownership | 0 local rejections caused solely by the 1-session, 2-vCPU, or 4096-MiB limits | Boundary tests with capture transport |
@@ -101,7 +101,8 @@ The following are the complete permitted operations inherited from PRD-001 Secti
 | `sessions.checkpoint` | `POST` | `/v1/sessions/:id/checkpoint` | `id` | `{name}` | `{ok:true}` | **200** |
 | `sessions.delete` | `DELETE` | `/v1/sessions/:id` | `id` | — | `{ok:true}` | **200** |
 | `sessions.open` | `POST` | `/v1/sessions/:id/open` | `id` | — | `{url}`; see Section 6.5 | **200** |
-| `records.list` | `GET` | `/v1/records` | None | — | Array of Section 6.6 record objects | **200** |
+| `sessions.agentAuth` | `GET` | `/v1/sessions/:id/agent-auth` | `id` | — | `{agent, method, state}`; see Section 6.6 | **200** |
+| `records.list` | `GET` | `/v1/records` | None | — | Array of Section 6.7 record objects | **200** |
 
 #### 6.1.1 Complete HTTP/JSON binding
 
@@ -111,7 +112,7 @@ The v1 SDK create operation is synchronous: it sends only the six documented cre
 
 Source-backed request types and bounds are: create `name: string` with length 1 through 80, optional `agent` in `claude-code | codex | openclaw`, optional integer `vcpus` from 1 through 8, optional integer `memory_mib` from 512 through 16384, legacy optional `allowed_hosts: string[]` with at most 128 non-empty strings, optional `outbound_policy: {mode, hosts}` where `mode` is `allowlist | denylist` and `hosts` contains at most 128 unique lowercase exact-domain or leading-wildcard rules, and optional integer `runtime_port` from 1 through 65535. `allowed_hosts` and `outbound_policy` are mutually exclusive. Empty `hosts` is explicit: an empty deny list allows all work destinations, while an empty allow list allows no work destinations except platform connectivity maintained internally by Runa. The public contract never exposes provider policy fields or Runa control domains. Exec accepts `command: string` with minimum length 1, optional `args: string[]`, optional `cwd: string`, and optional `timeout_secs: integer` in the inclusive range 1 through 600; checkpoint accepts `name: string` with length 1 through 80. Unknown request members, explicit `null`, wrong scalar types, fractional integers, and out-of-bound values are prohibited.
 
-Source-backed response types are: exec `exit_code: integer`, `stdout: string`, `stderr: string`, `duration_ms: non-negative integer`, `stdout_truncated: boolean`, and `stderr_truncated: boolean`; acknowledgement `ok: true`; open `url` matching the Section 6.5 capability pattern; record `id` and `session_id` as lower-case UUID strings, `kind` and `summary` as strings, `detail` as the sole opaque JSON value, and `created_at` as an ISO-8601 date-time string; `Me.id` as a lower-case UUID string, `email` as a string, an assigned workspace with literal `assigned:true` and required typed `usage`, or an unassigned workspace with literal `assigned:false` and a non-negative integer `waitlist_position`. Every response container is closed except nested `workspace.usage`, which is deliberately open: its three known members remain required and typed, while safe unmodeled siblings are ignored and not exposed.
+Source-backed response types are: exec `exit_code: integer`, `stdout: string`, `stderr: string`, `duration_ms: non-negative integer`, `stdout_truncated: boolean`, and `stderr_truncated: boolean`; acknowledgement `ok: true`; open `url` matching the Section 6.5 capability pattern; agent authentication status as the closed Section 6.6 object; record `id` and `session_id` as lower-case UUID strings, `kind` and `summary` as strings, `detail` as the sole opaque JSON value, and `created_at` as an ISO-8601 date-time string; `Me.id` as a lower-case UUID string, `email` as a string, an assigned workspace with literal `assigned:true` and required typed `usage`, or an unassigned workspace with literal `assigned:false` and a non-negative integer `waitlist_position`. Every response container is closed except nested `workspace.usage`, which is deliberately open: its three known members remain required and typed, while safe unmodeled siblings are ignored and not exposed.
 
 ### 6.2 Session object
 
@@ -168,7 +169,11 @@ https://<slug>.runacode.cloud/__runa/auth?t=…
 
 The returned URL is single-use and valid for 60 seconds. This is an external service semantic: the contract does not define a refresh route, reuse behavior, expiry response status, or the mechanism by which the service tracks use.
 
-### 6.6 Record object
+### 6.6 Agent authentication status
+
+`sessions.agentAuth` returns exactly `{agent, method, state}`. `agent` is `claude-code`, `codex`, `openclaw`, or `null`; `method` is `none`, `interactive_login`, or `api_key`; and `state` is `not_applicable`, `installing`, `login_required`, `authenticated`, `configured`, or `unavailable`. The object is closed and contains no stdout, provider identity, email, plan, token, API key, or terminal URL. `sessions.open` remains the sole SDK operation that obtains the short-lived terminal handoff used to complete an interactive login.
+
+### 6.7 Record object
 
 Every array element returned by `records.list` has this documented shape:
 
@@ -178,15 +183,15 @@ Every array element returned by `records.list` has this documented shape:
 
 The scalar types are fixed in Section 6.1.1. Ordering, pagination, filtering, and the vocabulary/semantics of `kind` remain unspecified.
 
-### 6.7 Backend-owned trial limits
+### 6.8 Backend-owned trial limits
 
 The service enforces these trial caps: at most **1 active session**, at most **2 vCPU**, and at most **4096 MiB**. An over-limit request results in the documented 409-or-422 service rejection described in Section 6.3. The SDK contract may expose requested and returned values, but it does not enforce, reserve, calculate, or predict these limits.
 
-### 6.8 Normative functional requirements
+### 6.9 Normative functional requirements
 
 | ID | Force | EARS requirement | Trace |
 | --- | --- | --- | --- |
-| R-002-01 | MUST | The shared SDK contract layer SHALL define exactly the 13 operation keys, methods, paths, and path-parameter placements in Section 6.1 and SHALL define no additional SDK remote operation; it SHALL treat the profile as a subset of the larger control plane. | G-002-01, G-002-04 |
+| R-002-01 | MUST | The shared SDK contract layer SHALL define exactly the 14 operation keys, methods, paths, and path-parameter placements in Section 6.1 and SHALL define no additional SDK remote operation; it SHALL treat the profile as a subset of the larger control plane. | G-002-01, G-002-04 |
 | R-002-02 | MUST | WHEN a programmatic Runa API key is used for an allowed `/v1/*` operation, the shared SDK contract layer SHALL represent its authorization assumption as `Authorization: Bearer <runa_sk_…>` and SHALL require `prds/infra/PRD-001-programmatic-api-authentication.md` before live SDK release; console JWT authentication remains a separate coexisting mechanism. | G-002-01 |
 | R-002-03 | MUST | WHEN an allowed operation has a documented request body, the shared SDK contract layer SHALL preserve exactly the field names and optional markers in Section 6.1 and SHALL not add a field, default, or validation rule not documented there. | G-002-01, G-002-04 |
 | R-002-04 | MUST | WHEN a successful response is documented as a session, the shared SDK contract layer SHALL represent exactly the Section 6.2 fields, the optional `agent` field, the three documented `agent` values, the seven documented `status` values, and no backend runtime identifier. | G-002-02, G-002-04 |
@@ -289,7 +294,7 @@ This register retains resolved IDs for traceability and lists the questions that
 
 | Milestone | Exit condition |
 | --- | --- |
-| M-002-01 Baseline accepted | The 13-operation SDK-profile table, complete HTTP/JSON binding, typed schema shapes, exact status facts, semantics, and remaining open-question register are approved. |
+| M-002-01 Baseline accepted | The 14-operation SDK-profile table, complete HTTP/JSON binding, typed schema shapes, exact status facts, semantics, and remaining open-question register are approved. |
 | M-002-02 Shared fixtures accepted | Synthetic conformance fixtures cover every normative requirement and both language adapters consume the same literals. |
 | M-002-03 Downstream handoff | PRD-003 and PRD-004 can consume the accepted baseline without redefining routes or wire shapes. |
 
@@ -297,8 +302,8 @@ This register retains resolved IDs for traceability and lists the questions that
 
 | Test ID | Given | When | Then | Requirements |
 | --- | --- | --- | --- | --- |
-| TC-002-01 | A capture transport for each SDK and a synthetic lower-case UUID session ID | Each of the 13 operation keys is invoked once with synthetic inputs | The captured method, normalized path, and path parameter placement exactly match one corresponding Section 6.1 row, with no SDK call to a console-only route; every `:id` path contains the unchanged UUID as one segment | R-002-01, R-002-17, R-002-21 |
-| TC-002-15 | Binding-complete fixtures for all 13 operations, exact 200/201 responses, malformed media/UTF-8/JSON/schema inputs, a redirect, and an 8-MiB boundary pair | Each request and response traverses the shared binding | Exact statuses decode; required `Accept` and conditional `Content-Type` are present; body bytes are UTF-8 JSON; redirect, oversized, malformed, and wrong-status responses normalize as malformed/non-success without being followed | R-002-20, R-002-23, R-002-25 |
+| TC-002-01 | A capture transport for each SDK and a synthetic lower-case UUID session ID | Each of the 14 operation keys is invoked once with synthetic inputs | The captured method, normalized path, and path parameter placement exactly match one corresponding Section 6.1 row, with no SDK call to a console-only route; every `:id` path contains the unchanged UUID as one segment | R-002-01, R-002-17, R-002-21 |
+| TC-002-15 | Binding-complete fixtures for all 14 operations, exact 200/201 responses, malformed media/UTF-8/JSON/schema inputs, a redirect, and an 8-MiB boundary pair | Each request and response traverses the shared binding | Exact statuses decode; required `Accept` and conditional `Content-Type` are present; body bytes are UTF-8 JSON; redirect, oversized, malformed, and wrong-status responses normalize as malformed/non-success without being followed | R-002-20, R-002-23, R-002-25 |
 | TC-002-16 | A synchronous SDK create fixture and mutations adding each console-only create member or an automatic poll | `sessions.create` completes | Only the six SDK fields are sent, HTTP 201 returns once, and every console-only field or poll mutation fails | R-002-24 |
 | TC-002-02 | A programmatic key fixture with a synthetic `runa_sk_` value | An allowed `/v1` operation is prepared | The contract binding supplies the exact documented Bearer-header form without exposing a usable fixture secret | R-002-02, R-002-18 |
 | TC-002-03 | Create, exec, and checkpoint request captures | Their contract serializers receive all documented fields, then each optional field is omitted in turn | The captures use exactly the field spellings and optionality in Section 6.1 and do not add undocumented defaults | R-002-03, R-002-17 |
@@ -315,7 +320,7 @@ This register retains resolved IDs for traceability and lists the questions that
 | TC-002-14 | A mutation asserts an undocumented scalar type, pagination rule, or lifecycle transition | The baseline/fixture review runs | The mutation fails because the assertion is absent from the documented baseline and present in the Section 11 question register | R-002-15 |
 | TC-002-19 | Requests for a second active session, more than 2 vCPU, or more than 4096 MiB are constructed against a capture transport | The SDK contract layer prepares the requests | It makes no local limit rejection, reservation, calculation, or prediction; any rejection is represented as a backend response | R-002-14 |
 | TC-002-20 | A proposed change adds a route, changes a wire literal, or redefines the one-time URL or limit semantics | Contract review runs without an accepted PRD-002 revision | The change is rejected before either language adopts it | R-002-16 |
-| TC-002-17 | Thirteen successful response fixtures, one for each Section 6.1 operation | Both bindings process each fixture | `sessions.create` is successful only with 201; each other operation is successful only with 200; a different status is not represented as a documented success | R-002-17, R-002-20 |
+| TC-002-17 | Fourteen successful response fixtures, one for each Section 6.1 operation | Both bindings process each fixture | `sessions.create` is successful only with 201; each other operation is successful only with 200; a different status is not represented as a documented success | R-002-17, R-002-20 |
 | TC-002-18 | A listed session whose `id` is `123e4567-e89b-12d3-a456-426614174000`, plus case-, whitespace-, and Unicode-normalization-different candidate strings | The contract substitutes the ID into every `:id` route and performs a local session lookup or refresh comparison | Every captured path contains that unchanged UUID as one unescaped segment, and only the byte-identical string matches; no candidate is coerced, trimmed, case-folded, or normalized | R-002-17, R-002-21 |
 
 ## 13. Instrumentation and analytics plan
@@ -342,7 +347,7 @@ Implementation planning may begin only when every item is true:
 - [ ] The problem statement cites `prds/_CONTEXT.md` and inherits, rather than re-derives, PRD-001's boundary and allowlist.
 - [ ] Goals are measurable and non-goals exclude downstream error, auth, transport, retry, domain-mapping, and security design.
 - [ ] Every normative requirement has a unique ID, EARS sentence, RFC 2119/8174 force, goal trace, and acceptance test.
-- [ ] All 13 SDK-profile operations have one method, path, path-parameter, request shape, success shape, complete binding, and exact-status entry.
+- [ ] All 14 SDK-profile operations have one method, path, path-parameter, request shape, success shape, complete binding, and exact-status entry.
 - [ ] Session states, `agent` values, session-ID type/equality/encoding, `me` variants, estimates, one-time open semantics, error envelope, and service limits are captured literally.
 - [ ] Every source-silent protocol detail is an explicit Section 11 question rather than an invented default.
 - [ ] Dependencies introduce no cycle; PRD-001 is the sole accepted predecessor.
@@ -367,7 +372,7 @@ Implementation planning may begin only when every item is true:
 ## 16. Definition of Done
 
 - [ ] Every MUST requirement has a passing conformance test in both SDK language suites.
-- [ ] All 13 operation fixtures assert the exact allowed method/path, documented request fields/types, complete HTTP/JSON binding, documented successful response shape, and exact success status.
+- [ ] All 14 operation fixtures assert the exact allowed method/path, documented request fields/types, complete HTTP/JSON binding, documented successful response shape, and exact success status.
 - [ ] `sessions.create` verifies HTTP 201; every other operation verifies HTTP 200.
 - [ ] Session-ID fixtures verify the lower-case UUID type, unchanged single-segment path substitution, and exact equality with no coercion or normalization.
 - [ ] Session fixtures cover all seven status values, all three `agent` values, and omitted `agent`, without a backend runtime identifier.
@@ -415,7 +420,7 @@ Implementation planning may begin only when every item is true:
 | Field | Decision |
 | --- | --- |
 | Context | The two SDKs require a shared contract before either can map it into idiomatic domain APIs, transports, errors, or security behavior. The available source is intentionally concise and does not define every conventional protocol detail. |
-| Decision | Treat the documented Runa REST facts as a literal external baseline and an explicit 13-operation SDK profile of the larger control plane. Model its typed fields, JSON/UTF-8 binding, conditional headers, 8-MiB response cap, no-redirect rule, exact 200/201 matrix, session-ID substitution/equality, synchronous create boundary, error envelope, `runacode.cloud` open semantics, estimates, and backend-owned limits; record only genuinely unresolved details as open questions. |
+| Decision | Treat the documented Runa REST facts as a literal external baseline and an explicit 14-operation SDK profile of the larger control plane. Model its typed fields, JSON/UTF-8 binding, conditional headers, 8-MiB response cap, no-redirect rule, exact 200/201 matrix, session-ID substitution/equality, synchronous create boundary, agent-authentication status, error envelope, `runacode.cloud` open semantics, estimates, and backend-owned limits; record only genuinely unresolved details as open questions. |
 | Status | Proposed with this PRD |
 | Driver | Runa SDK maintainers |
 | Approver | Runa SDK technical owner |

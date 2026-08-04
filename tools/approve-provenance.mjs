@@ -6,6 +6,18 @@ import { canonicalBytes, sha256 } from "./lib/canonical-json.mjs";
 import { ARTIFACTS, ARTIFACT_SPEC, loadBundle, validateBundle } from "./lib/contract-model.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+async function writeArtifactManifest() {
+  const artifacts = [];
+  for (const artifactPath of ARTIFACTS) {
+    const bytes = await readFile(path.join(root, artifactPath));
+    const [mediaType, role] = ARTIFACT_SPEC[artifactPath];
+    artifacts.push({ bytes: bytes.length, mediaType, path: artifactPath, role, sha256: sha256(bytes) });
+  }
+  const manifestPath = path.join(root, "artifact-manifest.json");
+  const manifestTemporary = `${manifestPath}.next`;
+  await writeFile(manifestTemporary, canonicalBytes({ artifacts, hashAlgorithm: "sha256", schemaVersion: 3 }), { flag: "wx" });
+  await rename(manifestTemporary, manifestPath);
+}
 const argument = (name) => {
   const index = process.argv.indexOf(name);
   return index < 0 ? undefined : process.argv[index + 1];
@@ -18,6 +30,21 @@ const prd002PrUrl = argument("--prd002-pr-url");
 const prd002MergeSha = argument("--prd002-merge-sha");
 const commit = /^[a-f0-9]{40}$/u;
 const pullRequest = /^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/pull\/\d+$/u;
+if (process.argv.includes("--refresh-blocked")) {
+  const provenancePath = path.join(root, "runa-sdk-contract.provenance.json");
+  const provenanceTemporary = `${provenancePath}.next`;
+  const provenance = JSON.parse(await readFile(provenancePath, "utf8"));
+  await writeFile(provenanceTemporary, canonicalBytes(provenance), { flag: "wx" });
+  await rename(provenanceTemporary, provenancePath);
+  const blockedBundle = await loadBundle(root);
+  validateBundle(blockedBundle);
+  if (blockedBundle.provenance.status !== "BLOCKED") {
+    throw new Error("R-003-15: blocked artifact refresh requires BLOCKED provenance.");
+  }
+  await writeArtifactManifest();
+  console.log("blocked provenance preserved; artifact manifest regenerated");
+  process.exit(0);
+}
 if (!commit.test(canonicalRef ?? "") || !commit.test(sourceRevision ?? "") ||
     !commit.test(contractMergeSha ?? "") || !commit.test(prd002MergeSha ?? "") ||
     !pullRequest.test(contractPrUrl ?? "") || !pullRequest.test(prd002PrUrl ?? "")) {
@@ -50,15 +77,6 @@ if (process.argv.includes("--dry-run")) {
   const provenanceTemporary = `${provenancePath}.next`;
   await writeFile(provenanceTemporary, approvedBytes, { flag: "wx" });
   await rename(provenanceTemporary, provenancePath);
-  const artifacts = [];
-  for (const artifactPath of ARTIFACTS) {
-    const bytes = await readFile(path.join(root, artifactPath));
-    const [mediaType, role] = ARTIFACT_SPEC[artifactPath];
-    artifacts.push({ bytes: bytes.length, mediaType, path: artifactPath, role, sha256: sha256(bytes) });
-  }
-  const manifestPath = path.join(root, "artifact-manifest.json");
-  const manifestTemporary = `${manifestPath}.next`;
-  await writeFile(manifestTemporary, canonicalBytes({ artifacts, hashAlgorithm: "sha256", schemaVersion: 3 }), { flag: "wx" });
-  await rename(manifestTemporary, manifestPath);
+  await writeArtifactManifest();
   console.log("provenance transition: APPROVED; artifact manifest regenerated");
 }

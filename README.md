@@ -28,7 +28,7 @@ npm run check
 Expected final lines include:
 
 ```text
-contract verification: PASS (13 SDK operations; provenance BLOCKED)
+contract verification: PASS (14 SDK operations; provenance BLOCKED)
 workspace source verification: PASS
 ```
 
@@ -55,7 +55,7 @@ npm run verify:workspace-sources
 | `source-artifacts.manifest.json` | Immutable hashes of the workspace inputs used for bootstrap. |
 
 The verifier independently derives the SDK projection from OpenAPI, checks the
-13 exact operation keys, methods, paths, success selectors, schema projection,
+14 exact operation keys, methods, paths, success selectors, schema projection,
 wire policy, canonical JSON bytes, exact snapshot schema, provenance digests,
 and artifact manifest. Mutation tests prove those checks fail closed.
 

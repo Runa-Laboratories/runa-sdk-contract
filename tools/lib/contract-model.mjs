@@ -29,12 +29,12 @@ export const CANONICAL_JSON_ARTIFACTS = Object.freeze([
   "runa-sdk-contract.snapshot.schema.json", "source-artifacts.manifest.json",
 ]);
 export const OPERATION_KEYS = Object.freeze([
-  "me.get", "records.list", "sessions.checkpoint", "sessions.create", "sessions.delete",
+  "me.get", "records.list", "sessions.agentAuth", "sessions.checkpoint", "sessions.create", "sessions.delete",
   "sessions.exec", "sessions.get", "sessions.list", "sessions.open", "sessions.pause",
   "sessions.resume", "sessions.start", "sessions.stop",
 ]);
 const COMPONENTS = Object.freeze([
-  "CheckpointRequest", "Error", "ExecRequest", "ExecResult", "Me", "Ok", "OpenResult",
+  "AgentAuthStatus", "CheckpointRequest", "Error", "ExecRequest", "ExecResult", "Me", "Ok", "OpenResult",
   "OutboundPolicy", "Record", "RuntimeUrl", "SdkCreateSession", "Session", "Uuid",
 ]);
 const SOURCE_BASELINE = "sources/PRD-002-rest-contract-baseline.md";
@@ -169,7 +169,7 @@ function validateSnapshot(snapshot, openapi) {
   }
   const openOperations = openApiOperations(openapi);
   const operationKeys = snapshot.operations.map((item) => item.operation_key);
-  if (!same(operationKeys, OPERATION_KEYS) || new Set(operationKeys).size !== 13) fail("R-003-03", "snapshot.operations", "exact operation catalog differs");
+  if (!same(operationKeys, OPERATION_KEYS) || new Set(operationKeys).size !== 14) fail("R-003-03", "snapshot.operations", "exact operation catalog differs");
   const descriptorKeys = ["error_facts", "http_binding", "method", "operation_key", "path_parameters", "path_template", "request", "source_refs", "success", "unresolved_refs"].sort();
   const exactHttp = { accept: "application/json", authorization_scheme: "Bearer", content_type_with_body: "application/json; charset=utf-8", follow_redirects: false, max_response_bytes: 8_388_608, response_encoding: "utf-8", response_media_type: "application/json", source_ref: "PRD-002#6.1.1" };
   for (const descriptor of snapshot.operations) {

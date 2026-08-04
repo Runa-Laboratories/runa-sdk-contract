@@ -301,6 +301,32 @@
         }
       }
     },
+    "/v1/sessions/{id}/agent-auth": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/SessionId"
+        }
+      ],
+      "get": {
+        "operationId": "sessions.agentAuth",
+        "x-sdk-exposed": true,
+        "responses": {
+          "200": {
+            "description": "Secret-free agent authentication status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/v1/records": {
       "get": {
         "operationId": "records.list",
@@ -656,6 +682,46 @@
             "maxLength": 253,
             "pattern": "^(?:\\*\\.)?(?![0-9]{1,3}(?:\\.[0-9]{1,3}){3}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
           }
+        }
+      }
+    },
+    "AgentAuthStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "method",
+        "state"
+      ],
+      "properties": {
+        "agent": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "claude-code",
+            "codex",
+            "openclaw",
+            null
+          ]
+        },
+        "method": {
+          "enum": [
+            "none",
+            "interactive_login",
+            "api_key"
+          ]
+        },
+        "state": {
+          "enum": [
+            "not_applicable",
+            "installing",
+            "login_required",
+            "authenticated",
+            "configured",
+            "unavailable"
+          ]
         }
       }
     },
