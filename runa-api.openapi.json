@@ -301,6 +301,32 @@
         }
       }
     },
+    "/v1/sessions/{id}/agent-auth": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/SessionId"
+        }
+      ],
+      "get": {
+        "operationId": "sessions.agentAuth",
+        "x-sdk-exposed": true,
+        "responses": {
+          "200": {
+            "description": "Low-information agent authentication state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuth"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/v1/records": {
       "get": {
         "operationId": "records.list",
@@ -658,6 +684,87 @@
           }
         }
       }
+    },
+    "AgentAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "method",
+        "state"
+      ],
+      "properties": {
+        "agent": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "claude-code",
+            "codex",
+            "openclaw",
+            null
+          ]
+        },
+        "method": {
+          "enum": [
+            "none",
+            "interactive_login",
+            "api_key"
+          ]
+        },
+        "state": {
+          "enum": [
+            "not_applicable",
+            "installing",
+            "login_required",
+            "authenticated",
+            "configured",
+            "unavailable"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "method": {
+              "const": "none"
+            },
+            "state": {
+              "const": "not_applicable"
+            }
+          }
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "interactive_login"
+            },
+            "state": {
+              "enum": [
+                "installing",
+                "login_required",
+                "authenticated",
+                "unavailable"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "api_key"
+            },
+            "state": {
+              "enum": [
+                "installing",
+                "configured",
+                "unavailable"
+              ]
+            }
+          }
+        }
+      ]
     },
     "Error": {
       "type": "object",
@@ -1154,6 +1261,6 @@
     "responseEncoding": "utf-8",
     "maxResponseBytes": 8388608,
     "followRedirects": false,
-    "sdkOperationCount": 13
+    "sdkOperationCount": 14
   }
 }

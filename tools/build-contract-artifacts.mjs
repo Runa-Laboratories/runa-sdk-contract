@@ -41,9 +41,10 @@ const unresolvedFor = (key) => {
   }));
 };
 const schemaSource = {
+  AgentAuth: "PRD-002#6.6",
   CheckpointRequest: "PRD-002#6.1.1", Error: "PRD-002#6.7", ExecRequest: "PRD-002#6.1.1",
   ExecResult: "PRD-002#6.1.1", Me: "PRD-002#6.4", Ok: "PRD-002#6.1.1",
-  OpenResult: "PRD-002#6.5", OutboundPolicy: "PRD-002#6.1.1", Record: "PRD-002#6.6", RuntimeUrl: "PRD-002#6.5",
+  OpenResult: "PRD-002#6.5", OutboundPolicy: "PRD-002#6.1.1", Record: "PRD-002#6.7", RuntimeUrl: "PRD-002#6.5",
   SdkCreateSession: "PRD-002#6.1.1", Session: "PRD-002#6.2", Uuid: "PRD-002#6.2",
 };
 const operationKeys = [...operationsByKey.keys()].sort();
@@ -119,7 +120,7 @@ const snapshot = {
   operations: descriptors,
   question_map: expected.questions,
   schema_version: 1,
-  snapshot_version: "1.1.0",
+  snapshot_version: "1.2.0",
   source_reference_map: sourceReferenceMap,
   unresolved_question_map: unresolvedQuestionMap,
 };
@@ -157,7 +158,7 @@ const schema = {
   properties: {
     components: ref("components"), contract_id: { const: "runa-sdk-contract" },
     generator_configuration: ref("generatorConfiguration"), operations: {
-      items: ref("operation"), maxItems: 13, minItems: 13, type: "array",
+      items: ref("operation"), maxItems: 14, minItems: 14, type: "array",
     },
     schema_version: { const: 1 }, snapshot_version: { pattern: "^\\d+\\.\\d+\\.\\d+$", type: "string" },
     question_map: { items: ref("question"), minItems: 1, type: "array" },

@@ -41,7 +41,7 @@ function cells(line) {
 
 const operations = [];
 for (const line of baseline.split(/\r?\n/u)) {
-  if (!/^\| `(?:me|records|sessions)\.[a-z]+` \|/u.test(line)) continue;
+  if (!/^\| `(?:me|records|sessions)\.[A-Za-z]+` \|/u.test(line)) continue;
   const row = cells(line);
   const operationKey = row[0].replaceAll("`", "");
   const method = row[1].replaceAll("`", "");
@@ -60,7 +60,7 @@ for (const line of baseline.split(/\r?\n/u)) {
   });
 }
 operations.sort((left, right) => left.operation_key.localeCompare(right.operation_key));
-if (operations.length !== 13 || new Set(operations.map((item) => item.operation_key)).size !== 13) {
+if (operations.length !== 14 || new Set(operations.map((item) => item.operation_key)).size !== 14) {
   throw new Error("R-003-27: PRD-002 operation extraction is incomplete or duplicated.");
 }
 
