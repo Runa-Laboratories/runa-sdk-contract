@@ -312,11 +312,11 @@
         "x-sdk-exposed": true,
         "responses": {
           "200": {
-            "description": "Secret-free agent authentication status",
+            "description": "Low-information agent authentication state",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgentAuthStatus"
+                  "$ref": "#/components/schemas/AgentAuth"
                 }
               }
             }
@@ -685,7 +685,7 @@
         }
       }
     },
-    "AgentAuthStatus": {
+    "AgentAuth": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -723,7 +723,48 @@
             "unavailable"
           ]
         }
-      }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "method": {
+              "const": "none"
+            },
+            "state": {
+              "const": "not_applicable"
+            }
+          }
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "interactive_login"
+            },
+            "state": {
+              "enum": [
+                "installing",
+                "login_required",
+                "authenticated",
+                "unavailable"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "api_key"
+            },
+            "state": {
+              "enum": [
+                "installing",
+                "configured",
+                "unavailable"
+              ]
+            }
+          }
+        }
+      ]
     },
     "Error": {
       "type": "object",
@@ -1220,6 +1261,6 @@
     "responseEncoding": "utf-8",
     "maxResponseBytes": 8388608,
     "followRedirects": false,
-    "sdkOperationCount": 13
+    "sdkOperationCount": 14
   }
 }

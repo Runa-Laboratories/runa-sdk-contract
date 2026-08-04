@@ -34,7 +34,7 @@ export const OPERATION_KEYS = Object.freeze([
   "sessions.resume", "sessions.start", "sessions.stop",
 ]);
 const COMPONENTS = Object.freeze([
-  "AgentAuthStatus", "CheckpointRequest", "Error", "ExecRequest", "ExecResult", "Me", "Ok", "OpenResult",
+  "AgentAuth", "CheckpointRequest", "Error", "ExecRequest", "ExecResult", "Me", "Ok", "OpenResult",
   "OutboundPolicy", "Record", "RuntimeUrl", "SdkCreateSession", "Session", "Uuid",
 ]);
 const SOURCE_BASELINE = "sources/PRD-002-rest-contract-baseline.md";

@@ -171,7 +171,7 @@ The returned URL is single-use and valid for 60 seconds. This is an external ser
 
 ### 6.6 Agent authentication status
 
-`sessions.agentAuth` returns exactly `{agent, method, state}`. `agent` is `claude-code`, `codex`, `openclaw`, or `null`; `method` is `none`, `interactive_login`, or `api_key`; and `state` is `not_applicable`, `installing`, `login_required`, `authenticated`, `configured`, or `unavailable`. The object is closed and contains no stdout, provider identity, email, plan, token, API key, or terminal URL. `sessions.open` remains the sole SDK operation that obtains the short-lived terminal handoff used to complete an interactive login.
+`sessions.agentAuth` returns exactly the closed `AgentAuth` object `{agent, method, state}`. `agent` is `claude-code`, `codex`, `openclaw`, or `null`. The valid method/state pairs are: `none/not_applicable`; `interactive_login` with `installing`, `login_required`, `authenticated`, or `unavailable`; and `api_key` with `installing`, `configured`, or `unavailable`. The object contains no stdout, provider identity, email, plan, token, API key, or terminal URL. `sessions.open` remains the sole SDK operation that obtains the short-lived terminal handoff used to complete an interactive login.
 
 ### 6.7 Record object
 
