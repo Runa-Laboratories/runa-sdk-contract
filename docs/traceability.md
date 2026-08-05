@@ -9,6 +9,7 @@ is implemented; downstream adoption and external approval gates are not.
 | R-003-01, R-021-01 | One binding-complete checked-in snapshot at the repository root | Both language generators consume only the snapshot |
 | R-003-02 | Closed structural draft 2020-12 snapshot schema | Structural weakening and descriptor mutations fail |
 | R-003-03, R-003-28, R-021-03, R-021-22 | Projection derived independently from OpenAPI | Exact 14-key, method, path, success, wire, and UUID assertions |
+| R-002-24, R-002-26, R-002-27 | Optional `background` create field with omitted/false synchronous compatibility and explicit `true` readiness semantics | PRD source-shape extraction, OpenAPI/snapshot agreement, optional-boolean mutation test, and downstream polling acceptance cases |
 | R-003-13 | Detached source and projection digests | Provenance digest mutation fails closed |
 | R-003-14, R-003-22 | Stable fact-identity and source-reference comparison | Snapshot projection and checked-in projection are independently compared with the extractor manifest |
 | R-003-23, R-021-20 | Safe requirement-tagged diagnostics | Errors contain an artifact/requirement fact and never retain payloads or secrets |

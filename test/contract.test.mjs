@@ -81,6 +81,25 @@ test("TC-003-02 structural schema rejects an undeclared normative field", () => 
   assert.throws(() => validateBundle(candidate), /R-003-02: snapshot schema: .* is undeclared/u);
 });
 
+test("TC-002-27 binds background only as an optional boolean SDK create field", () => {
+  const schema = baseline.snapshot.components.schemas.SdkCreateSession;
+  assert.deepEqual(schema.properties.background, {
+    description: "Optional asynchronous provisioning mode. Omission or false preserves synchronous creation. True may return status creating; poll sessions.get while status remains creating before treating the machine as ready.",
+    type: "boolean",
+  });
+  assert.equal(schema.required.includes("background"), false);
+  assert.equal(Object.hasOwn(baseline.openapi.components.schemas.ConsoleCreateSession.properties, "background"), true);
+  for (const field of ["terminal", "api_key", "token_saving", "capture_tool_io"]) {
+    assert.equal(Object.hasOwn(schema.properties, field), false);
+  }
+  const create = baseline.snapshot.operations.find((operation) => operation.operation_key === "sessions.create");
+  assert.match(create.request.source_shape, /background\?/u);
+
+  const candidate = clone();
+  candidate.snapshot.components.schemas.SdkCreateSession.properties.background.type = "string";
+  assert.throws(() => validateBundle(candidate), /R-003-28/u);
+});
+
 test("TC-003-04 rejects substituted provenance", () => {
   const candidate = clone();
   candidate.provenance.artifacts.contract_projection.sha256 = "0".repeat(64);

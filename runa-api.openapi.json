@@ -81,7 +81,7 @@
         },
         "responses": {
           "201": {
-            "description": "Completed session observation",
+            "description": "Session observation. With background omitted or false it is complete and status is not creating; with background true it may be creating and requires sessions.get polling while that status remains.",
             "content": {
               "application/json": {
                 "schema": {
@@ -907,6 +907,10 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 65535
+        },
+        "background": {
+          "type": "boolean",
+          "description": "Optional asynchronous provisioning mode. Omission or false preserves synchronous creation. True may return status creating; poll sessions.get while status remains creating before treating the machine as ready."
         }
       }
     },
