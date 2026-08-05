@@ -120,7 +120,7 @@ const snapshot = {
   operations: descriptors,
   question_map: expected.questions,
   schema_version: 1,
-  snapshot_version: "1.2.0",
+  snapshot_version: "1.3.0",
   source_reference_map: sourceReferenceMap,
   unresolved_question_map: unresolvedQuestionMap,
 };
